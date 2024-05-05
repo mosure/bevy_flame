@@ -12,5 +12,4 @@ bevy flame model viewer plugin
 
 | `bevy_flame` | `bevy` |
 | :--         | :--    |
-| `1.3`       | `0.13` |
-| `1.0`       | `0.12` |
+| `0.1`       | `0.13` |
