@@ -1,3 +1,2 @@
-// TODO: input struct
-// TODO: inference
-
+pub mod noise;
+pub mod upload;

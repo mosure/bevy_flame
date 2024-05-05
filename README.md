@@ -1,62 +1,11 @@
 # bevy_flame 🧩
 [![test](https://github.com/mosure/bevy_flame/workflows/test/badge.svg)](https://github.com/Mosure/bevy_flame/actions?query=workflow%3Atest)
 [![GitHub License](https://img.shields.io/github/license/mosure/bevy_flame)](https://raw.githubusercontent.com/mosure/bevy_flame/main/LICENSE)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/mosure/bevy_flame)](https://github.com/mosure/bevy_flame)
-[![GitHub Releases](https://img.shields.io/github/v/release/mosure/bevy_flame?include_prereleases&sort=semver)](https://github.com/mosure/bevy_flame/releases)
-[![GitHub Issues](https://img.shields.io/github/issues/mosure/bevy_flame)](https://github.com/mosure/bevy_flame/issues)
-[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/mosure/bevy_flame.svg)](http://isitmaintained.com/project/mosure/bevy_flame)
 [![crates.io](https://img.shields.io/crates/v/bevy_flame.svg)](https://crates.io/crates/bevy_flame)
 
-bevy plugin to parse command line arguments and URL query parameters into resources
+bevy flame model viewer plugin
 
-
-## command line arguments
-`cargo run --example=minimal -- --my_string hello --my_int 42 --my_bool`
-
-## URL query parameters
-`http://localhost:8080/?my_string=hello&my_int=42&my_bool=true`
-
-
-## minimal example
-
-```rust
-use bevy_flame::BevyArgsPlugin;
-
-
-#[derive(
-    Default,
-    Debug,
-    Resource,
-    Serialize,
-    Deserialize,
-    Parser,
-)]
-#[command(about = "a minimal example of bevy_flame", version, long_about = None)]
-pub struct MinimalArgs {
-    #[arg(long, default_value = "hello")]
-    pub my_string: String,
-
-    #[arg(long, default_value = "42")]
-    pub my_int: i32,
-
-    #[arg(long)]
-    pub my_bool: bool,
-}
-
-
-pub fn main() {
-    let mut app = App::new();
-
-    app.add_plugins(BevyArgsPlugin::<MinimalArgs>::default());
-    app.add_systems(Startup, print_minimal_args);
-
-    app.run();
-}
-
-fn print_minimal_args(args: Res<MinimalArgs>) {
-    println!("{:?}", *args);
-}
-```
+![Alt text](docs/bevy_flame_no_texture.gif)
 
 
 ## compatible bevy versions
