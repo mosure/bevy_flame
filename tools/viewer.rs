@@ -27,6 +27,9 @@ use bevy_panorbit_camera::{
     PanOrbitCameraPlugin,
 };
 
+#[cfg(target_arch = "wasm32")]
+use bevy_ort::{Onnx, Session};
+
 use bevy_flame::{
     noise::{
         NoisyFlamePlugin,
@@ -34,6 +37,20 @@ use bevy_flame::{
     },
     upload::MeshUploadPlugin,
 };
+
+
+pub fn log(msg: &str) {
+    #[cfg(debug_assertions)]
+    #[cfg(target_arch = "wasm32")]
+    {
+        web_sys::console::log_1(&msg.into());
+    }
+    #[cfg(debug_assertions)]
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        println!("{}", msg);
+    }
+}
 
 
 #[derive(
@@ -48,33 +65,75 @@ use bevy_flame::{
 #[command(about = "a GUI editor application for developing ladon kernels", version)]
 struct BevyFlameArgs {
     #[arg(long, default_value = "1920.0", help = "editor output width")]
+    #[serde(default)]
     width: f32,
 
     #[arg(long, default_value = "1080.0", help = "editor output height")]
+    #[serde(default)]
     height: f32,
 
     #[arg(long, default_value = "true")]
+    #[serde(default)]
     pub show_fps: bool,
 
     #[arg(long, default_value = "true")]
+    #[serde(default)]
     pub editor: bool,
 }
 
 
 fn main() {
+    log("bevy_flame starting...");
+    #[cfg(debug_assertions)]
+    #[cfg(target_arch = "wasm32")]
+    {
+        console_error_panic_hook::set_once();
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        ort::wasm::initialize();
+    }
+
     let args = parse_args::<BevyFlameArgs>();
 
     let mut app = App::new();
+
+    #[cfg(target_arch = "wasm32")]
+    let primary_window = Some(Window {
+        // fit_canvas_to_parent: true,
+        mode: bevy::window::WindowMode::Windowed,
+        prevent_default_event_handling: true,
+        title: "bevy_flame".to_string(),
+
+        #[cfg(feature = "perftest")]
+        present_mode: bevy::window::PresentMode::AutoNoVsync,
+        #[cfg(not(feature = "perftest"))]
+        present_mode: bevy::window::PresentMode::AutoVsync,
+
+        ..default()
+    });
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let primary_window = Some(Window {
+        canvas: Some("#bevy".to_string()),
+        mode: bevy::window::WindowMode::Windowed,
+        prevent_default_event_handling: false,
+        resolution: (args.width, args.height).into(),
+        title: "bevy_flame".to_string(),
+
+        #[cfg(feature = "perftest")]
+        present_mode: bevy::window::PresentMode::AutoNoVsync,
+        #[cfg(not(feature = "perftest"))]
+        present_mode: bevy::window::PresentMode::AutoVsync,
+
+        ..default()
+    });
+
     app.add_plugins(
             DefaultPlugins
             .set(WindowPlugin {
-                primary_window: Some(Window {
-                    present_mode: bevy::window::PresentMode::AutoVsync,
-                    mode: bevy::window::WindowMode::Windowed,
-                    resolution: (args.width, args.height).into(),
-                    title: "bevy_flame".to_string(),
-                    ..default()
-                }),
+                primary_window,
                 ..default()
             })
         )
@@ -86,9 +145,10 @@ fn main() {
             MeshUploadPlugin,
             NoisyFlamePlugin,
         ))
-        .add_systems(Startup, load_flame)
         .add_systems(Startup, setup)
         .add_systems(Update, press_esc_close);
+
+    app.add_systems(Startup, load);
 
     app.insert_resource(ClearColor(Color::rgb_u8(0, 0, 0)));
 
@@ -106,11 +166,30 @@ fn main() {
 }
 
 
-fn load_flame(
+#[cfg(not(target_arch = "wasm32"))]
+fn load(
     asset_server: Res<AssetServer>,
     mut flame: ResMut<Flame>,
 ) {
     flame.onnx = asset_server.load("models/flame.onnx");
+}
+
+#[cfg(target_arch = "wasm32")]
+static ORT_DATA: &[u8] = include_bytes!("../assets/models/flame.ort");
+
+#[cfg(target_arch = "wasm32")]
+fn load(
+    mut flame: ResMut<Flame>,
+    mut onnx: ResMut<Assets<Onnx>>,
+) {
+    flame.onnx = onnx.add(
+        Onnx::from_in_memory(
+            Session::builder()
+                .unwrap()
+                .commit_from_memory_directly(ORT_DATA)
+                .unwrap()
+        )
+    );
 }
 
 
