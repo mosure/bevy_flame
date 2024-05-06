@@ -3,7 +3,7 @@
 [![GitHub License](https://img.shields.io/github/license/mosure/bevy_flame)](https://raw.githubusercontent.com/mosure/bevy_flame/main/LICENSE)
 [![crates.io](https://img.shields.io/crates/v/bevy_flame.svg)](https://crates.io/crates/bevy_flame)
 
-bevy flame model viewer plugin
+bevy flame model viewer plugin, view the [live demo](https://mosure.github.io/bevy_flame/?show_fps=true)
 
 ![Alt text](docs/bevy_flame_no_texture.gif)
 
